@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "BONZY",
+    "slug": "bonzy",
+    "scheme": "bonzy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "kz.bonzy.app"
+    },
+    "android": {
+      "package": "kz.bonzy.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#EF6438",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "name": "BONZY — вкусно быть вместе",
+      "backgroundColor": "#FAF9F6"
+    }
+  }
+}

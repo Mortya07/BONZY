@@ -1,0 +1,52 @@
+{
+  "name": "bonzy",
+  "private": true,
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "description": "BONZY — любимые рестораны, заказы и бонусы в одном приложении",
+  "version": "1.0.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mortya07/BONZY.git"
+  },
+  "main": "index.ts",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "~58.0.25",
+    "expo-status-bar": "~58.0.5",
+    "lucide-react-native": "^1.72.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-qrcode-svg": "^6.3.54",
+    "react-native-safe-area-context": "~5.11.1",
+    "react-native-svg": "15.16.0",
+    "react-native-web": "^0.21.4"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.0",
+    "@types/node": "^26.6.6",
+    "@types/react": "~19.3.0",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/domain.test.ts",
+    "test:e2e": "playwright test",
+    "export:web": "expo export --platform web",
+    "export:native": "expo export --platform ios --platform android --output-dir dist-native",
+    "export:all": "expo export --platform all",
+    "preview": "node scripts/serve-web.mjs",
+    "build:android": "pnpm dlx eas-cli@27.10.0 build --platform android --profile preview",
+    "build:ios": "pnpm dlx eas-cli@27.10.0 build --platform ios --profile preview",
+    "format": "prettier --write App.tsx src tests *.json *.ts scripts/*.mjs"
+  }
+}
