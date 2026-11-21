@@ -1,4 +1,44 @@
 import { test, expect } from "@playwright/test";
+test("staff awards an in-person purchase to a second guest device", async ({
+  page,
+  browser,
+  baseURL,
+}, testInfo) => {
+  const guest = await browser.newPage({ baseURL });
+  try {
+    await guest.goto("/");
+    await guest.getByRole("button", { name: "Мой QR", exact: true }).click();
+    const card = await guest.getByText(/^[0-9A-F]{12}$/).innerText();
+    await page.getByRole("tab", { name: "Профиль", exact: true }).click();
+    await page.getByRole("button", { name: "Я сотрудник" }).click();
+    await page.getByLabel("Код заведения").fill("AULA");
+    await page.getByRole("button", { name: "Найти заведение" }).click();
+    const mobile = testInfo.project.name === "mobile";
+    await page
+      .getByRole("button", { name: mobile ? "Аяна" : "Тимур", exact: true })
+      .click();
+    await page.getByLabel("Личный PIN").fill(mobile ? "2468" : "1357");
+    await page.getByRole("button", { name: "Войти в смену" }).click();
+    await page.getByRole("button", { name: "Сканировать QR гостя" }).click();
+    await page.getByRole("button", { name: "Ввести номер карты" }).click();
+    await page.getByLabel("Номер карты гостя").fill(card);
+    await page.getByRole("button", { name: "Найти карту" }).click();
+    const receipt = "TEST-" + card;
+    await page.getByLabel("Номер чека").fill(receipt);
+    await page.getByLabel("Оплачено, ₸").fill("8500");
+    await page.getByRole("button", { name: "Подтвердить начисление" }).click();
+    await expect(
+      page.getByText("Чек " + receipt + " · начислено 850 бонусов"),
+    ).toBeVisible();
+    await expect(
+      guest.getByText("Последнее начисление AULA: +850 б. · чек " + receipt),
+    ).toBeVisible({ timeout: 12000 });
+    await page.getByRole("button", { name: "История смены" }).click();
+    await expect(page.getByText("Карта выбрана вручную").first()).toBeVisible();
+  } finally {
+    await guest.close();
+  }
+});
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(page.getByText("Хороший день, Алижан")).toBeVisible();
@@ -66,7 +106,7 @@ test("QR, profile and changing brands without losing cart accidentally", async (
   page,
 }) => {
   await page.getByRole("button", { name: "Мой QR", exact: true }).click();
-  await expect(page.getByText("BZ · 000 142")).toBeVisible();
+  await expect(page.getByText(/^[0-9A-F]{12}$/)).toBeVisible();
   await page.getByRole("button", { name: "Закрыть", exact: true }).click();
   await page.getByRole("tab", { name: "Профиль", exact: true }).click();
   await page.getByRole("button", { name: "Изменить имя" }).click();

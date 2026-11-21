@@ -74,6 +74,10 @@ import {
 } from "./src/domain";
 import { Brand, Button, C, Empty, IconButton, s, Tag } from "./src/ui";
 
+import { Staff } from "./src/Staff";
+import { Opening } from "./src/Opening";
+import { guestCard, cardPrefix, type Card } from "./src/staffApi";
+
 type Tab = "discover" | "favorites" | "bonuses" | "orders" | "profile";
 type Sheet =
   | { type: "restaurant"; id: string }
@@ -112,6 +116,9 @@ function Bonzy() {
   const insets = useSafeAreaInsets();
   const [state, setState] = useState<State>(initialState);
   const stateRef = useRef(state);
+  const [staffOpen, setStaffOpen] = useState(false);
+  const [card, setCard] = useState<Card>();
+  const [cardError, setCardError] = useState("");
   const [ready, setReady] = useState(false);
   const [tab, setTab] = useState<Tab>("discover");
   const [sheet, setSheet] = useState<Sheet>(null);
@@ -191,6 +198,54 @@ function Bonzy() {
       return false;
     }
   };
+  useEffect(() => {
+    if (!ready || staffOpen) return;
+    let live = true;
+    let timer: ReturnType<typeof setTimeout>;
+    async function sync() {
+      try {
+        const latest = await guestCard();
+        if (!live) return;
+        setCard((previous) =>
+          previous?.id === latest.id &&
+          previous.credits.length === latest.credits.length
+            ? previous
+            : latest,
+        );
+        setCardError("");
+        const seen = new Set(stateRef.current.inStoreCredits || []);
+        const fresh = latest.credits.filter((c) => !seen.has(c.id));
+        if (fresh.length)
+          update((current) => ({
+            ...current,
+            inStoreCredits: [
+              ...(current.inStoreCredits || []),
+              ...fresh.map((c) => c.id),
+            ],
+            balances: {
+              ...current.balances,
+              aula:
+                (current.balances.aula || 0) +
+                fresh.reduce((n, c) => n + c.points, 0),
+            },
+          }));
+      } catch (error) {
+        if (live)
+          setCardError(
+            error instanceof Error
+              ? error.message
+              : "Карта временно недоступна",
+          );
+      } finally {
+        if (live) timer = setTimeout(sync, 5000);
+      }
+    }
+    void sync();
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
+  }, [ready, staffOpen]);
   const go = (next: Tab) => {
     setTab(next);
     setSheet(null);
@@ -856,6 +911,11 @@ function Bonzy() {
       <>
         <Text style={s.eyebrow}>РАДЫ БЫТЬ РЯДОМ</Text>
         <Text style={s.pageTitle}>Мой BONZY</Text>
+        <View style={{ marginBottom: 16 }}>
+          <Button secondary onPress={() => setStaffOpen(true)}>
+            Я сотрудник
+          </Button>
+        </View>
         <View style={s.profileCard}>
           <View style={s.avatar}>
             <Text style={{ color: C.orange, fontSize: 32, fontWeight: "700" }}>
@@ -1288,27 +1348,36 @@ function Bonzy() {
                       { textAlign: "center", marginTop: 12, marginBottom: 25 },
                     ]}
                   >
-                    В рабочей версии покажи QR на кассе,{"\n"}чтобы получить
-                    бонусы за покупку.
+                    Покажи карту сотруднику BONZY для начисления бонусов.
                   </Text>
                   <View style={s.qrFrame}>
-                    <QRCode
-                      value="bonzy://demo/guest/BZ-000142"
-                      size={210}
-                      color={C.ink}
-                      backgroundColor="#fff"
-                    />
+                    {card ? (
+                      <QRCode
+                        value={cardPrefix + card.id}
+                        size={210}
+                        color={C.ink}
+                        backgroundColor="#fff"
+                      />
+                    ) : (
+                      <Text style={s.body}>
+                        {cardError || "Получаем карту…"}
+                      </Text>
+                    )}
                   </View>
                   <Text style={[s.bold, { letterSpacing: 3, marginTop: 23 }]}>
-                    BZ · 000 142
+                    {card?.id ?? "…"}
                   </Text>
                   <Text style={[s.small, { marginTop: 8 }]}>
                     {state.name} · демоаккаунт
                   </Text>
                   <View style={[s.infoCard, { marginTop: 28 }]}>
                     <Text style={[s.small, { textAlign: "center" }]}>
-                      Демонстрационный QR. Не авторизует покупку и не начисляет
-                      реальные бонусы.
+                      {card?.credits[0]
+                        ? "Последнее начисление AULA: +" +
+                          card.credits[0].points +
+                          " б. · чек " +
+                          card.credits[0].receipt
+                        : "Демонстрационная карта гостя"}
                     </Text>
                   </View>
                 </View>
@@ -1559,6 +1628,7 @@ function Bonzy() {
       </Modal>
     );
   }
+  if (staffOpen) return <Staff onExit={() => setStaffOpen(false)} />;
   if (!ready)
     return (
       <View style={[s.root, s.empty]}>
@@ -1681,6 +1751,7 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <Bonzy />
+      <Opening />
     </SafeAreaProvider>
   );
 }

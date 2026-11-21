@@ -56,6 +56,7 @@ export type State = {
   version: 1;
   name: string;
   favorites: string[];
+  inStoreCredits?: string[];
   balances: Record<string, number>;
   cart: Cart;
   orders: Order[];
@@ -260,6 +261,9 @@ export function restoreState(
     if (!record(s)) return initialState;
     if (
       s.version !== 1 ||
+      (s.inStoreCredits !== undefined &&
+        (!Array.isArray(s.inStoreCredits) ||
+          !s.inStoreCredits.every((id) => typeof id === "string"))) ||
       typeof s.name !== "string" ||
       !s.name.trim() ||
       s.name.length > 30 ||

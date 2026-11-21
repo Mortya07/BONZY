@@ -15,6 +15,8 @@
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~58.0.25",
+    "expo-camera": "~58.0.14",
+    "expo-crypto": "~58.0.8",
     "expo-status-bar": "~58.0.5",
     "lucide-react-native": "^1.72.0",
     "react": "19.3.0",
@@ -39,7 +41,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/domain.test.ts",
+    "test": "tsx --test tests/domain.test.ts tests/staff.test.cjs",
     "test:e2e": "playwright test",
     "export:web": "expo export --platform web",
     "export:native": "expo export --platform ios --platform android --output-dir dist-native",

@@ -2,6 +2,8 @@ import http from "node:http";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import path from "node:path";
+import staff from "../server/staff.cjs";
+const api = staff.createStaffApi();
 const root = path.resolve("dist");
 const types = {
   ".html": "text/html; charset=utf-8",
@@ -13,6 +15,8 @@ const types = {
   ".svg": "image/svg+xml",
 };
 const server = http.createServer(async (req, res) => {
+  if (req.url?.startsWith("/bonzy-api/"))
+    return api(req, res, () => res.writeHead(404).end());
   if (!["GET", "HEAD"].includes(req.method)) {
     res.writeHead(405).end();
     return;
